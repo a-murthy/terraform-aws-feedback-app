@@ -27,7 +27,6 @@ output "subnet_id" {
 # ==============================================================================
 
 data "aws_network_interface" "fargate_ip_lookup" {
-  # FIX: Queries the managed service name tag directly to avoid any string mismatches
   filter {
     name   = "tag:aws:ecs:serviceName"
     values = [aws_ecs_service.app_service.name]
@@ -38,6 +37,6 @@ data "aws_network_interface" "fargate_ip_lookup" {
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  # FIXED: Employs the array position element lookup syntax to extract the raw IP
+  # FIXED: Restored the exact list index accessor needed to parse the public IP cleanly
   value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
 }
