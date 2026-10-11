@@ -23,20 +23,11 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 PORTAL DEMO LINK (Fargate Dynamic Public IP Lookup Fixed)
+# 📋 NO-DATA-SOURCE PORTAL DEMO LINK (Clean Service Map References)
 # ==============================================================================
-
-data "aws_network_interface" "fargate_ip_lookup" {
-  filter {
-    name   = "group-id"
-    values = [aws_security_group.app_sg.id]
-  }
-
-  depends_on = [time_sleep.wait_for_fargate_eni]
-}
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  # FIX: Correct placement of index accessor on the list block map to clear linter errors
-  value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
+  # Reads the primary public entry endpoint straight from your managed service network block
+  value       = "http://${aws_ecs_service.app_service.name}.${var.app_name}.local:5000"
 }
