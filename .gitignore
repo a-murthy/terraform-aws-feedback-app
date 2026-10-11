@@ -1,0 +1,12 @@
+# Local IaC Execution Caches
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.tfstate.lock.info
+.terraform.lock.hcl
+
+# System & IDE Caches
+.DS_Store
+.idea/
+.vscode/
+
