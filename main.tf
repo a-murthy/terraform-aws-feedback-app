@@ -74,7 +74,7 @@ resource "aws_security_group" "app_sg" {
 }
 
 # ==============================================================================
-# 4. COMPUTE ORCHESTRATION SEGMENT (Wiped Clean of Execution Roles)
+# 4. COMPUTE ORCHESTRATION SEGMENT
 # ==============================================================================
 resource "aws_ecs_cluster" "demo_cluster" {
   name = "${var.app_name}-cluster"
@@ -118,6 +118,9 @@ resource "aws_ecs_service" "app_service" {
   task_definition = aws_ecs_task_definition.no_code_app.arn
   desired_count   = 1
   launch_type     = "FARGATE"
+
+  # FIX: Instructs AWS to tag the underlying ENI interfaces automatically
+  enable_ecs_managed_tags = true
 
   network_configuration {
     subnets          = [aws_subnet.public_a.id]

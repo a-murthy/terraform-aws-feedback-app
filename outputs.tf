@@ -23,19 +23,14 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 PUBLIC PORTAL DEMO LINK (Extracts Actual Public Internet IP)
+# 📋 PUBLIC PORTAL DEMO LINK (Clean Tag Querying Isolation Loop)
 # ==============================================================================
 
 data "aws_network_interface" "fargate_ip_lookup" {
-  # Nativly uses AWS wildcards (*) to locate the exact network card for this app instance
+  # FIX: Queries the managed service name tag directly to avoid any string mismatches
   filter {
-    name   = "description"
-    values = ["*${var.app_name}*"]
-  }
-
-  filter {
-    name   = "subnet-id"
-    values = [aws_subnet.public_a.id]
+    name   = "tag:aws:ecs:serviceName"
+    values = [aws_ecs_service.app_service.name]
   }
 
   depends_on = [time_sleep.wait_for_fargate_eni]
@@ -43,6 +38,6 @@ data "aws_network_interface" "fargate_ip_lookup" {
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  # FIXED: Employs the precise [0] list index accessor to pull the public IP safely
+  # FIXED: Employs the array position element lookup syntax to extract the raw IP
   value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
 }
