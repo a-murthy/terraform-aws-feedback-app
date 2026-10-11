@@ -1,9 +1,16 @@
+# ==============================================================================
+# 1. CORE PLUGINS & CONFIGURATIONS
+# ==============================================================================
 terraform {
   required_version = ">= 1.5.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.9.0"
     }
   }
 }
@@ -13,7 +20,7 @@ provider "aws" {
 }
 
 # ==============================================================================
-# NETWORKING COMPONENT LAYER
+# 2. NETWORKING COMPONENT LAYER
 # ==============================================================================
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
@@ -44,7 +51,7 @@ resource "aws_route_table_association" "public_a" {
 }
 
 # ==============================================================================
-# TRAFFIC POLICY SEGMENT (Syntax Error Fixed)
+# 3. TRAFFIC POLICY SEGMENT
 # ==============================================================================
 resource "aws_security_group" "app_sg" {
   name        = "${var.app_name}-sg"
@@ -55,45 +62,19 @@ resource "aws_security_group" "app_sg" {
     from_port   = 5000
     to_port     = 5000
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # FIX: String converted to modern list array
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"] # FIX: String converted to modern list array
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 # ==============================================================================
-# 🔐 REQUIRED CONTAINER SECURITY DELEGATION (Alternative Formatting Fix)
-# ==============================================================================
-resource "aws_iam_role" "ecs_execution_role" {
-  name_prefix = "ecs-exec-${var.app_name}" 
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Principal = { 
-          Service = ["ecs-tasks.amazonaws.com"] 
-        }
-      }
-    ]
-  })
-}
-
-
-resource "aws_iam_role_policy_attachment" "ecs_execution_attachment" {
-  role       = aws_iam_role.ecs_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-# ==============================================================================
-# COMPUTE ORCHESTRATION SEGMENT
+# 4. COMPUTE ORCHESTRATION SEGMENT (Wiped Clean of Execution Roles)
 # ==============================================================================
 resource "aws_ecs_cluster" "demo_cluster" {
   name = "${var.app_name}-cluster"
@@ -105,7 +86,6 @@ resource "aws_ecs_task_definition" "no_code_app" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_execution_role.arn
 
   container_definitions = jsonencode([
     {
@@ -144,4 +124,12 @@ resource "aws_ecs_service" "app_service" {
     security_groups  = [aws_security_group.app_sg.id]
     assign_public_ip = true
   }
+}
+
+# ==============================================================================
+# 5. ⏱️ TIME BUFFER FOR FARGATE BOOT (Orchestrated Sleep Timer)
+# ==============================================================================
+resource "time_sleep" "wait_for_fargate_eni" {
+  depends_on = [aws_ecs_service.app_service]
+  create_duration = "30s"
 }

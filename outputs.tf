@@ -28,17 +28,15 @@ output "subnet_id" {
 
 data "aws_network_interface" "fargate_ip_lookup" {
   filter {
-    name   = "description"
-    values = ["Attached to Elastic Network Interface created by ECS Fargate Task for family ${var.app_name}"]
+    name   = "group-id"
+    values = [aws_security_group.app_sg.id]
   }
 
-  # Blocks calculation until the Fargate service finishes cluster placement
-  depends_on = [aws_ecs_service.app_service]
+  depends_on = [time_sleep.wait_for_fargate_eni]
 }
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  # FIX: Added [0] index accessor to properly parse the underlying list of objects
+  # FIX: Correct placement of index accessor on the list block map to clear linter errors
   value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
 }
-
