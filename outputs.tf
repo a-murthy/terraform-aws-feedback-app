@@ -23,11 +23,26 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 NO-DATA-SOURCE PORTAL DEMO LINK (Clean Service Map References)
+# 📋 PUBLIC PORTAL DEMO LINK (Extracts Actual Public Internet IP)
 # ==============================================================================
+
+data "aws_network_interface" "fargate_ip_lookup" {
+  # Nativly uses AWS wildcards (*) to locate the exact network card for this app instance
+  filter {
+    name   = "description"
+    values = ["*${var.app_name}*"]
+  }
+
+  filter {
+    name   = "subnet-id"
+    values = [aws_subnet.public_a.id]
+  }
+
+  depends_on = [time_sleep.wait_for_fargate_eni]
+}
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  # Reads the primary public entry endpoint straight from your managed service network block
-  value       = "http://${aws_ecs_service.app_service.name}.${var.app_name}.local:5000"
+  # FIXED: Employs the precise [0] list index accessor to pull the public IP safely
+  value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
 }
