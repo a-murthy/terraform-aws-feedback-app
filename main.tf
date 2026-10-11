@@ -67,10 +67,9 @@ resource "aws_security_group" "app_sg" {
 }
 
 # ==============================================================================
-# 🔐 REQUIRED CONTAINER SECURITY DELEGATION (Fixed Principal & Naming)
+# 🔐 REQUIRED CONTAINER SECURITY DELEGATION (Alternative Formatting Fix)
 # ==============================================================================
 resource "aws_iam_role" "ecs_execution_role" {
-  # Safe prefix naming to prevent cross-workspace allocation naming collisions
   name_prefix = "ecs-exec-${var.app_name}" 
 
   assume_role_policy = jsonencode({
@@ -79,11 +78,14 @@ resource "aws_iam_role" "ecs_execution_role" {
       {
         Action    = "sts:AssumeRole"
         Effect    = "Allow"
-        Principal = { Service = "://amazonaws.com" } # FIX: Complete service principal string restored
+        Principal = { 
+          Service = ["ecs-tasks.amazonaws.com"] 
+        }
       }
     ]
   })
 }
+
 
 resource "aws_iam_role_policy_attachment" "ecs_execution_attachment" {
   role       = aws_iam_role.ecs_execution_role.name
