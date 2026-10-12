@@ -179,6 +179,12 @@ resource "aws_ecs_service" "app_service" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
+  # FIX 1: Forces the UI pipeline to terminate old tasks instantly upon execution plan updates
+  force_new_deployment = true
+
+  # FIX 2: Allows AWS to drop the active desired count to 0 to evict the broken container immediately
+  deployment_minimum_healthy_percent = 0
+
   network_configuration {
     subnets          = [aws_subnet.public_a.id]
     security_groups  = [aws_security_group.app_sg.id]
@@ -191,3 +197,4 @@ resource "aws_ecs_service" "app_service" {
     container_port   = 5000
   }
 }
+
