@@ -48,7 +48,7 @@ resource "aws_route_table_association" "public_a_binding" {
 }
 
 # ==============================================================================
-# 3. 🎯 FIXED DEMO ENDPOINT LAYER (Elastic IP & Network Load Balancer)
+# 3. FIXED DEMO ENDPOINT LAYER (Elastic IP & Network Load Balancer)
 # ==============================================================================
 resource "aws_eip" "nlb_eip" {
   domain     = "vpc"
