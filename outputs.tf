@@ -4,8 +4,7 @@
 
 output "container_image" {
   description = "The verified target runtime engine URI consumed by the compute cluster."
-  # FIXED: Aligned directly with main.tf task definitions to prevent tag metadata string drift
-  value       = "public.ecr.aws/platform-engineering-demos/feedback-app:1.0.0"
+  value       = var.container_image_uri
 }
 
 output "ecs_cluster_name" {

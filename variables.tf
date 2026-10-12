@@ -27,3 +27,8 @@ variable "ecs_service_name_string" {
   default = "feedback-app-service"
 }
 
+variable "container_image_uri" {
+  description = "The target public ECR image repository path utilized for the deployment container runtime"
+  type        = string
+  default     = "public.ecr.aws/platform-engineering-demos/feedback-app:v1"
+}
