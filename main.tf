@@ -150,7 +150,7 @@ resource "aws_ecs_task_definition" "no_code_app" {
   container_definitions = jsonencode([
     {
       name      = "feedback-board-engine"
-      image     = "public.ecr.aws/platform-engineering-demos/feedback-app:1.0.0"
+      image     = "public.ecr.aws/platform-engineering-demos/customer-feedback-app:1.0.0"
       essential = true
       portMappings = [
         {
@@ -179,10 +179,7 @@ resource "aws_ecs_service" "app_service" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
-  # FIX 1: Forces the UI pipeline to terminate old tasks instantly upon execution plan updates
-  force_new_deployment = true
-
-  # FIX 2: Allows AWS to drop the active desired count to 0 to evict the broken container immediately
+  force_new_deployment               = true
   deployment_minimum_healthy_percent = 0
 
   network_configuration {
@@ -197,4 +194,3 @@ resource "aws_ecs_service" "app_service" {
     container_port   = 5000
   }
 }
-
