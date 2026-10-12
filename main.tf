@@ -150,7 +150,7 @@ resource "aws_ecs_task_definition" "no_code_app" {
   container_definitions = jsonencode([
     {
       name      = "feedback-board-engine"
-      image     = "public.ecr.aws/platform-engineering-demos/feedback-app:latest"
+      image     = "public.ecr.aws/platform-engineering-demos/feedback-app:1.0.0"
       essential = true
       portMappings = [
         {
