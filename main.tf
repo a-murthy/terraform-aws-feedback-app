@@ -8,10 +8,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.9.0"
-    }
   }
 }
 
@@ -28,11 +24,9 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public_a" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "${var.region}a"
-  
-  # CRITICAL FIX: Restored to match your todo-app architecture blueprint standard
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "${var.region}a"
   map_public_ip_on_launch = true
 }
 
@@ -48,14 +42,50 @@ resource "aws_route_table" "public" {
   }
 }
 
-# Bridges your subnet to the internet gateway route table map
 resource "aws_route_table_association" "public_a_binding" {
   subnet_id      = aws_subnet.public_a.id
   route_table_id = aws_route_table.public.id
 }
 
 # ==============================================================================
-# 3. TRAFFIC POLICY SEGMENT
+# 3. 🎯 FIXED DEMO ENDPOINT LAYER (Elastic IP & Load Balancer)
+# ==============================================================================
+resource "aws_eip" "nlb_eip" {
+  domain     = "vpc"
+  depends_on = [aws_internet_gateway.gw]
+}
+
+resource "aws_lb" "app_nlb" {
+  name               = "${var.app_name}-nlb"
+  load_balancer_type = "network"
+  
+  subnet_mapping {
+    subnet_id     = aws_subnet.public_a.id
+    allocation_id = aws_eip.nlb_eip.id
+  }
+}
+
+resource "aws_lb_target_group" "app_tg" {
+  name        = "${var.app_name}-tg"
+  port        = 5000
+  protocol    = "TCP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+}
+
+resource "aws_lb_listener" "app_listener" {
+  load_balancer_arn = aws_lb.app_nlb.arn
+  port              = 5000
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+}
+
+# ==============================================================================
+# 4. TRAFFIC POLICY SEGMENT
 # ==============================================================================
 resource "aws_security_group" "app_sg" {
   name        = "${var.app_name}-sg"
@@ -78,7 +108,7 @@ resource "aws_security_group" "app_sg" {
 }
 
 # ==============================================================================
-# 4. 🔐 CONTAINER SECURITY DELEGATION (Base64 Filter-Proof)
+# 5. 🔐 CONTAINER SECURITY DELEGATION (Base64 Filter-Proof)
 # ==============================================================================
 resource "aws_iam_role" "ecs_execution_role" {
   name = "ecs-exec-${substr(var.app_name, 0, 20)}"
@@ -103,7 +133,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_attachment" {
 }
 
 # ==============================================================================
-# 5. COMPUTE ORCHESTRATION SEGMENT
+# 6. COMPUTE ORCHESTRATION SEGMENT
 # ==============================================================================
 resource "aws_ecs_cluster" "demo_cluster" {
   name = "${var.app_name}-cluster"
@@ -149,20 +179,15 @@ resource "aws_ecs_service" "app_service" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
-  enable_ecs_managed_tags = true
-  propagate_tags          = "SERVICE"
-
   network_configuration {
     subnets          = [aws_subnet.public_a.id]
     security_groups  = [aws_security_group.app_sg.id]
     assign_public_ip = true
   }
-}
 
-# ==============================================================================
-# 6. ⏱️ TIME BUFFER FOR FARGATE BOOT (90s Sleep Timer)
-# ==============================================================================
-resource "time_sleep" "wait_for_fargate_eni" {
-  depends_on = [aws_ecs_service.app_service]
-  create_duration = "90s"
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app_tg.arn
+    container_name   = "feedback-board-engine"
+    container_port   = 5000
+  }
 }
