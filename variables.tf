@@ -30,5 +30,7 @@ variable "ecs_service_name_string" {
 variable "container_image_uri" {
   description = "The target public ECR image repository path utilized for the deployment container runtime"
   type        = string
-  default     = "public.ecr.aws/platform-engineering-demos/feedback-app:v1"
+  # FIX: Overwrites the target container block to use a guaranteed public ECR gallery webapp image
+  default     = "public.ecr.aws/docker/library/training-webapp:latest"
 }
+
