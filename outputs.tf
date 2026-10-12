@@ -23,7 +23,7 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 REFERENCE-ALIGNED DEMO LINK (Fixed Timer Dependency Loop)
+# 📋 REFERENCE-ALIGNED PORTAL LINK (Status Filter Synced to Reference App)
 # ==============================================================================
 
 data "aws_network_interface" "fargate_ip_lookup" {
@@ -37,10 +37,10 @@ data "aws_network_interface" "fargate_ip_lookup" {
     values = [aws_subnet.public_a.id]
   }
 
-  # REFERENCE STRATEGY: Forces the network lookup to halt until the 90s sleep clock finishes
+  # ALIGNED TO TODO-APP METRICS: Searches strictly for the fully live, associated state
   filter {
-    name   = "description"
-    values = ["Attached to Elastic Network Interface created by ECS Fargate Task*", time_sleep.wait_for_fargate_eni.id != "" ? "Attached to Elastic Network Interface created by ECS Fargate Task*" : ""]
+    name   = "status"
+    values = ["associated"]
   }
 
   depends_on = [time_sleep.wait_for_fargate_eni]
