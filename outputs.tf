@@ -23,7 +23,7 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 NO-CONSOLE PORTAL DEMO LINK (Fargate Dynamic Public IP Lookup Fixed)
+# 📋 REFERENCE-ALIGNED PORTAL LINK (Fixed Timer Lockout)
 # ==============================================================================
 
 data "aws_network_interface" "fargate_ip_lookup" {
@@ -35,6 +35,12 @@ data "aws_network_interface" "fargate_ip_lookup" {
   filter {
     name   = "subnet-id"
     values = [aws_subnet.public_a.id]
+  }
+
+  # HARD CONSTRAINT UNIFICATION: Forces query initialization to halt until the 60s timer outputs its ID
+  filter {
+    name   = "tag:TimerBlockToken"
+    values = [time_sleep.wait_for_fargate_eni.id]
   }
 
   depends_on = [time_sleep.wait_for_fargate_eni]
