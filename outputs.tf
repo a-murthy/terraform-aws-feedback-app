@@ -4,7 +4,7 @@
 
 output "container_image" {
   description = "The verified target runtime engine URI consumed by the compute cluster."
-  value       = "public.ecr.aws/platform-engineering-demos/customer-feedback-app:1.0.0"
+  value       = "public.ecr.aws/hashicorp-education/customer-feedback-app:1.0.0"
 }
 
 output "ecs_cluster_name" {
