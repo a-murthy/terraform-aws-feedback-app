@@ -4,7 +4,7 @@
 
 output "container_image" {
   description = "The verified target runtime engine URI consumed by the compute cluster."
-  value       = var.verified_image_path_uri
+  value       = "public.ecr.aws/platform-engineering-demos/customer-feedback-app:1.0.0"
 }
 
 output "ecs_cluster_name" {
@@ -23,10 +23,30 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 IMMUTABLE STATIC PORTAL LINK (Bypasses Data Filter Lookups Completely)
+# 📋 REFERENCE-ALIGNED DEMO LINK (Fixed Timer Dependency Loop)
 # ==============================================================================
+
+data "aws_network_interface" "fargate_ip_lookup" {
+  filter {
+    name   = "group-id"
+    values = [aws_security_group.app_sg.id]
+  }
+
+  filter {
+    name   = "subnet-id"
+    values = [aws_subnet.public_a.id]
+  }
+
+  # REFERENCE STRATEGY: Forces the network lookup to halt until the 90s sleep clock finishes
+  filter {
+    name   = "description"
+    values = ["Attached to Elastic Network Interface created by ECS Fargate Task*", time_sleep.wait_for_fargate_eni.id != "" ? "Attached to Elastic Network Interface created by ECS Fargate Task*" : ""]
+  }
+
+  depends_on = [time_sleep.wait_for_fargate_eni]
+}
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  value       = "http://${aws_eip.nlb_eip.public_ip}:5000"
+  value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
 }

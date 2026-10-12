@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.9.0"
+    }
   }
 }
 
@@ -48,55 +52,7 @@ resource "aws_route_table_association" "public_a_binding" {
 }
 
 # ==============================================================================
-# 3. FIXED DEMO ENDPOINT LAYER (Elastic IP & Network Load Balancer)
-# ==============================================================================
-resource "aws_eip" "nlb_eip" {
-  domain     = "vpc"
-  depends_on = [aws_internet_gateway.gw]
-}
-
-resource "aws_lb" "app_nlb" {
-  name               = "${var.app_name}-nlb"
-  load_balancer_type = "network"
-  
-  subnet_mapping {
-    subnet_id     = aws_subnet.public_a.id
-    allocation_id = aws_eip.nlb_eip.id
-  }
-}
-
-resource "aws_lb_target_group" "app_tg" {
-  name        = "${var.app_name}-tg"
-  port        = 5000
-  protocol    = "TCP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
-
-  health_check {
-    protocol            = "HTTP"
-    port                = "5000"
-    path                = "/"
-    interval            = 15
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    matcher             = "200-399"
-  }
-}
-
-resource "aws_lb_listener" "app_listener" {
-  load_balancer_arn = aws_lb.app_nlb.arn
-  port              = 5000
-  protocol          = "TCP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app_tg.arn
-  }
-}
-
-# ==============================================================================
-# 4. TRAFFIC POLICY SEGMENT
+# 3. TRAFFIC POLICY SEGMENT
 # ==============================================================================
 resource "aws_security_group" "app_sg" {
   name        = "${var.app_name}-sg"
@@ -119,7 +75,7 @@ resource "aws_security_group" "app_sg" {
 }
 
 # ==============================================================================
-# 5. 🔐 CONTAINER SECURITY DELEGATION (Base64 Filter-Proof)
+# 4. 🔐 CONTAINER SECURITY DELEGATION (Base64 Filter-Proof)
 # ==============================================================================
 resource "aws_iam_role" "ecs_execution_role" {
   name = "ecs-exec-${substr(var.app_name, 0, 20)}"
@@ -144,7 +100,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_attachment" {
 }
 
 # ==============================================================================
-# 6. COMPUTE ORCHESTRATION SEGMENT
+# 5. COMPUTE ORCHESTRATION SEGMENT
 # ==============================================================================
 resource "aws_ecs_cluster" "demo_cluster" {
   name = "${var.app_name}-cluster"
@@ -161,7 +117,7 @@ resource "aws_ecs_task_definition" "no_code_app" {
   container_definitions = jsonencode([
     {
       name      = "feedback-board-engine"
-      image     = var.verified_image_path_uri
+      image     = "public.ecr.aws/platform-engineering-demos/customer-feedback-app:1.0.0"
       essential = true
       portMappings = [
         {
@@ -190,18 +146,17 @@ resource "aws_ecs_service" "app_service" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
-  force_new_deployment               = true
-  deployment_minimum_healthy_percent = 0
-
   network_configuration {
     subnets          = [aws_subnet.public_a.id]
     security_groups  = [aws_security_group.app_sg.id]
     assign_public_ip = true
   }
+}
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.app_tg.arn
-    container_name   = "feedback-board-engine"
-    container_port   = 5000
-  }
+# ==============================================================================
+# 6. ⏱️ TIME BUFFER FOR FARGATE BOOT (90s Countdown Hold)
+# ==============================================================================
+resource "time_sleep" "wait_for_fargate_eni" {
+  depends_on      = [aws_ecs_service.app_service]
+  create_duration = "90s"
 }
