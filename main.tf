@@ -185,6 +185,8 @@ resource "aws_ecs_service" "app_service" {
   network_configuration {
     subnets          = [aws_subnet.public_a.id]
     security_groups  = [aws_security_group.app_sg.id]
+    
+    # ALIGNED WITH REFERENCE BLUEPRINT: Grants internet lanes to download container layers
     assign_public_ip = true
   }
 
@@ -194,3 +196,4 @@ resource "aws_ecs_service" "app_service" {
     container_port   = 5000
   }
 }
+
