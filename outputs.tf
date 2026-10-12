@@ -27,7 +27,7 @@ output "subnet_id" {
 # ==============================================================================
 
 data "aws_network_interface" "fargate_ip_lookup" {
-  # FIX: Matches the immutable system infrastructure type description to clear filter bugs
+  # FIX: Employs an explicit description match combined with subnet isolation criteria
   filter {
     name   = "description"
     values = ["Attached to Elastic Network Interface created by ECS Fargate Task*"]

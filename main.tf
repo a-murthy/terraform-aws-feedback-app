@@ -160,9 +160,9 @@ resource "aws_ecs_service" "app_service" {
 }
 
 # ==============================================================================
-# 6. ⏱️ TIME BUFFER FOR FARGATE BOOT (60s Sleep Timer)
+# 6. ⏱️ TIME BUFFER FOR FARGATE BOOT (90s Sleep Timer)
 # ==============================================================================
 resource "time_sleep" "wait_for_fargate_eni" {
   depends_on = [aws_ecs_service.app_service]
-  create_duration = "60s"
+  create_duration = "90s"
 }
