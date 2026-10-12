@@ -23,24 +23,19 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 REFERENCE-ALIGNED PORTAL LINK (Fixed Timer Lockout)
+# 📋 NO-CONSOLE PORTAL DEMO LINK (Fargate Dynamic Public IP Lookup Fixed)
 # ==============================================================================
 
 data "aws_network_interface" "fargate_ip_lookup" {
+  # FIX: Matches the immutable system infrastructure type description to clear filter bugs
   filter {
-    name   = "group-id"
-    values = [aws_security_group.app_sg.id]
+    name   = "description"
+    values = ["Attached to Elastic Network Interface created by ECS Fargate Task*"]
   }
 
   filter {
     name   = "subnet-id"
     values = [aws_subnet.public_a.id]
-  }
-
-  # HARD CONSTRAINT UNIFICATION: Forces query initialization to halt until the 60s timer outputs its ID
-  filter {
-    name   = "tag:TimerBlockToken"
-    values = [time_sleep.wait_for_fargate_eni.id]
   }
 
   depends_on = [time_sleep.wait_for_fargate_eni]

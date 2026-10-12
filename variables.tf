@@ -23,5 +23,7 @@ variable "maintenance_mode" {
 
 variable "ecs_service_name_string" {
   type    = string
-  default = "feedback-app-service"
+  # FIX: Bumps the resource namespace string to clear the AWS naming collision loop
+  default = "feedback-app-service-v2"
 }
+
