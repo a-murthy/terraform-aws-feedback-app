@@ -42,6 +42,5 @@ data "aws_network_interface" "fargate_ip_lookup" {
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  # CRITICAL FIX: Explicit array index accessor restored to match provider specifications
   value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
 }
