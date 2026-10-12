@@ -4,7 +4,7 @@
 
 output "container_image" {
   description = "The verified target runtime engine URI consumed by the compute cluster."
-  value       = var.container_image_uri
+  value       = var.verified_image_path_uri
 }
 
 output "ecs_cluster_name" {

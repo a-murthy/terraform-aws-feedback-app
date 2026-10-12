@@ -23,14 +23,11 @@ variable "maintenance_mode" {
 
 variable "ecs_service_name_string" {
   type    = string
-  # FIX: Bumps the resource namespace string to clear the AWS naming collision loop
   default = "feedback-app-service"
 }
 
-variable "container_image_uri" {
+variable "verified_image_path_uri" {
   description = "The target public ECR image repository path utilized for the deployment container runtime"
   type        = string
-  # FIX: Change this string to the production-wrapped engine asset
-  default     = "public.ecr.aws/platform-engineering-demos/feedback-app:1.0.0"
+  default     = "public.ecr.aws/platform-engineering-demos/customer-feedback-app:1.0.0"
 }
-

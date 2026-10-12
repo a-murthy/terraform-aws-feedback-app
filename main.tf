@@ -72,7 +72,6 @@ resource "aws_lb_target_group" "app_tg" {
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
 
-  # FIX: Forces the NLB to use valid HTTP queries for health probes to prevent container panics
   health_check {
     protocol            = "HTTP"
     port                = "5000"
@@ -84,7 +83,6 @@ resource "aws_lb_target_group" "app_tg" {
     matcher             = "200-399"
   }
 }
-
 
 resource "aws_lb_listener" "app_listener" {
   load_balancer_arn = aws_lb.app_nlb.arn
@@ -163,7 +161,7 @@ resource "aws_ecs_task_definition" "no_code_app" {
   container_definitions = jsonencode([
     {
       name      = "feedback-board-engine"
-      image     = var.container_image_uri
+      image     = var.verified_image_path_uri
       essential = true
       portMappings = [
         {
@@ -198,8 +196,6 @@ resource "aws_ecs_service" "app_service" {
   network_configuration {
     subnets          = [aws_subnet.public_a.id]
     security_groups  = [aws_security_group.app_sg.id]
-    
-    # ALIGNED WITH REFERENCE BLUEPRINT: Grants internet lanes to download container layers
     assign_public_ip = true
   }
 
@@ -209,4 +205,3 @@ resource "aws_ecs_service" "app_service" {
     container_port   = 5000
   }
 }
-
