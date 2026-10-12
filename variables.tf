@@ -20,3 +20,8 @@ variable "maintenance_mode" {
   type        = string
   default     = "false"
 }
+
+variable "ecs_service_name_string" {
+  type    = string
+  default = "feedback-app-service"
+}

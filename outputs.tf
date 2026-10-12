@@ -14,7 +14,7 @@ output "ecs_cluster_name" {
 
 output "ecs_service_name" {
   description = "The runtime orchestrator supervising the application availability state."
-  value       = aws_ecs_service.app_service.name
+  value       = var.ecs_service_name_string
 }
 
 output "subnet_id" {
@@ -23,13 +23,18 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 PUBLIC PORTAL DEMO LINK (Clean Tag Querying Isolation Loop)
+# 📋 NO-CONSOLE PORTAL DEMO LINK (Fargate Dynamic Public IP Lookup Fixed)
 # ==============================================================================
 
 data "aws_network_interface" "fargate_ip_lookup" {
   filter {
-    name   = "tag:aws:ecs:serviceName"
-    values = [aws_ecs_service.app_service.name]
+    name   = "group-id"
+    values = [aws_security_group.app_sg.id]
+  }
+
+  filter {
+    name   = "subnet-id"
+    values = [aws_subnet.public_a.id]
   }
 
   depends_on = [time_sleep.wait_for_fargate_eni]
@@ -37,6 +42,6 @@ data "aws_network_interface" "fargate_ip_lookup" {
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  # FIXED: Restored the exact list index accessor needed to parse the public IP cleanly
+  # CRITICAL FIX: Explicit array index accessor restored to match provider specifications
   value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
 }

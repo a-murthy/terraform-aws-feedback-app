@@ -74,7 +74,7 @@ resource "aws_security_group" "app_sg" {
 }
 
 # ==============================================================================
-# 4. COMPUTE ORCHESTRATION SEGMENT
+# 4. COMPUTE ORCHESTRATION SEGMENT (Wiped Clean of IAM Roles)
 # ==============================================================================
 resource "aws_ecs_cluster" "demo_cluster" {
   name = "${var.app_name}-cluster"
@@ -113,14 +113,11 @@ resource "aws_ecs_task_definition" "no_code_app" {
 }
 
 resource "aws_ecs_service" "app_service" {
-  name            = "${var.app_name}-service"
+  name            = var.ecs_service_name_string
   cluster         = aws_ecs_cluster.demo_cluster.id
   task_definition = aws_ecs_task_definition.no_code_app.arn
   desired_count   = 1
   launch_type     = "FARGATE"
-
-  # FIX: Instructs AWS to tag the underlying ENI interfaces automatically
-  enable_ecs_managed_tags = true
 
   network_configuration {
     subnets          = [aws_subnet.public_a.id]
@@ -130,9 +127,9 @@ resource "aws_ecs_service" "app_service" {
 }
 
 # ==============================================================================
-# 5. ⏱️ TIME BUFFER FOR FARGATE BOOT (Orchestrated Sleep Timer)
+# 5. ⏱️ TIME BUFFER FOR FARGATE BOOT (Aligned with todo-app 60s standard)
 # ==============================================================================
 resource "time_sleep" "wait_for_fargate_eni" {
   depends_on = [aws_ecs_service.app_service]
-  create_duration = "30s"
+  create_duration = "60s"
 }
