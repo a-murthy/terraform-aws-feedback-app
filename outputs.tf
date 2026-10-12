@@ -23,25 +23,10 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 NO-CONSOLE PORTAL DEMO LINK (Clean Description Filtering Matrix)
+# 📋 IMMUTABLE STATIC PORTAL LINK (Bypasses Data Filter Lookups Completely)
 # ==============================================================================
-
-data "aws_network_interface" "fargate_ip_lookup" {
-  # Matches the immutable infrastructure string tag created natively by AWS Fargate
-  filter {
-    name   = "description"
-    values = ["Attached to Elastic Network Interface created by ECS Fargate Task*"]
-  }
-
-  filter {
-    name   = "subnet-id"
-    values = [aws_subnet.public_a.id]
-  }
-
-  depends_on = [time_sleep.wait_for_fargate_eni]
-}
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
+  value       = "http://${aws_eip.nlb_eip.public_ip}:5000"
 }
