@@ -74,10 +74,11 @@ resource "aws_security_group" "app_sg" {
 }
 
 # ==============================================================================
-# 4. 🔐 CONTAINER SECURITY DELEGATION (Filter-Proof via Base64 Decoding)
+# 4. 🔐 CONTAINER SECURITY DELEGATION (Name synced with your AWS User Policy)
 # ==============================================================================
 resource "aws_iam_role" "ecs_execution_role" {
-  name = "exec-role-${substr(var.app_name, 0, 20)}"
+  # FIX: Prepend ecs- to match your allowed AWS security boundary parameters
+  name = "ecs-exec-${substr(var.app_name, 0, 20)}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -92,6 +93,7 @@ resource "aws_iam_role" "ecs_execution_role" {
     ]
   })
 }
+
 
 resource "aws_iam_role_policy_attachment" "ecs_execution_attachment" {
   role       = aws_iam_role.ecs_execution_role.name
