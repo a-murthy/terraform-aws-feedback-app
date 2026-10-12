@@ -27,10 +27,9 @@ output "subnet_id" {
 # ==============================================================================
 
 data "aws_network_interface" "fargate_ip_lookup" {
-  # FIX: Targets the explicit task-managed network description prefix to resolve multi-match overlap
   filter {
-    name   = "description"
-    values = ["Attached to Elastic Network Interface created by ECS Fargate Task*"]
+    name   = "group-id"
+    values = [aws_security_group.app_sg.id]
   }
 
   filter {
@@ -43,6 +42,5 @@ data "aws_network_interface" "fargate_ip_lookup" {
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  # FIX: Correct array position index formatting to clear the unsupported list attribute bug
   value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
 }
