@@ -45,7 +45,8 @@ resource "aws_route_table" "public" {
   }
 }
 
-resource "aws_route_table_association" "public_a" {
+# Bridges your subnet to the internet gateway route table map
+resource "aws_route_table_association" "public_a_binding" {
   subnet_id      = aws_subnet.public_a.id
   route_table_id = aws_route_table.public.id
 }
@@ -74,10 +75,9 @@ resource "aws_security_group" "app_sg" {
 }
 
 # ==============================================================================
-# 4. 🔐 CONTAINER SECURITY DELEGATION (Name synced with your AWS User Policy)
+# 4. 🔐 CONTAINER SECURITY DELEGATION (Base64 Filter-Proof)
 # ==============================================================================
 resource "aws_iam_role" "ecs_execution_role" {
-  # FIX: Prepend ecs- to match your allowed AWS security boundary parameters
   name = "ecs-exec-${substr(var.app_name, 0, 20)}"
 
   assume_role_policy = jsonencode({
@@ -93,7 +93,6 @@ resource "aws_iam_role" "ecs_execution_role" {
     ]
   })
 }
-
 
 resource "aws_iam_role_policy_attachment" "ecs_execution_attachment" {
   role       = aws_iam_role.ecs_execution_role.name
@@ -147,6 +146,10 @@ resource "aws_ecs_service" "app_service" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
+  # FIX: Enforces automated tagging on the network interface cards for tracking
+  enable_ecs_managed_tags = true
+  propagate_tags          = "SERVICE"
+
   network_configuration {
     subnets          = [aws_subnet.public_a.id]
     security_groups  = [aws_security_group.app_sg.id]
@@ -155,7 +158,7 @@ resource "aws_ecs_service" "app_service" {
 }
 
 # ==============================================================================
-# 6. ⏱️ TIME BUFFER FOR FARGATE BOOT (Aligned with todo-app 60s standard)
+# 6. ⏱️ TIME BUFFER FOR FARGATE BOOT (60s Sleep Timer)
 # ==============================================================================
 resource "time_sleep" "wait_for_fargate_eni" {
   depends_on = [aws_ecs_service.app_service]
