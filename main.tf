@@ -146,7 +146,6 @@ resource "aws_ecs_service" "app_service" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
-  # FIX: Enforces automated tagging on the network interface cards for tracking
   enable_ecs_managed_tags = true
   propagate_tags          = "SERVICE"
 
