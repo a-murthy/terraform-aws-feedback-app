@@ -117,7 +117,7 @@ resource "aws_ecs_task_definition" "no_code_app" {
   container_definitions = jsonencode([
     {
       name      = "feedback-board-engine"
-      image     = "public.ecr.aws/hashicorp-education/customer-feedback-app:1.0.0"
+      image     = "ghcr.io/a-murthy/feedback-app:1.0.0" # 🟢 FIXED: Points directly to your clean GitHub package
       essential = true
       portMappings = [
         {

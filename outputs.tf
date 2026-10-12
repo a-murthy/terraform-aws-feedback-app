@@ -4,7 +4,7 @@
 
 output "container_image" {
   description = "The verified target runtime engine URI consumed by the compute cluster."
-  value       = "public.ecr.aws/hashicorp-education/customer-feedback-app:1.0.0"
+  value       = "ghcr.io/a-murthy/feedback-app:1.0.0" # 🟢 FIXED: Match target image tracker
 }
 
 output "ecs_cluster_name" {
