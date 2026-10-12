@@ -6,7 +6,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0" # <--- Updated from ~> 5.0 to match the reference app
     }
     time = {
       source  = "hashicorp/time"
@@ -157,6 +157,11 @@ resource "aws_ecs_service" "app_service" {
 # 6. ⏱️ TIME BUFFER FOR FARGATE BOOT (90s Countdown Hold)
 # ==============================================================================
 resource "time_sleep" "wait_for_fargate_eni" {
-  depends_on      = [aws_ecs_service.app_service]
+  triggers = {
+    task_definition_arn = aws_ecs_task_definition.no_code_app.arn
+  }
+
+  depends_on = [aws_ecs_service.app_service]
   create_duration = "90s"
 }
+

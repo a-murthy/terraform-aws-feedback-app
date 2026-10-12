@@ -23,30 +23,33 @@ output "subnet_id" {
 }
 
 # ==============================================================================
-# 📋 REFERENCE-ALIGNED PORTAL LINK (Status Filter Synced to Reference App)
+# 📋 REFERENCE-REPLICATED PORTAL LINK
 # ==============================================================================
 
-data "aws_network_interface" "fargate_ip_lookup" {
+data "aws_network_interfaces" "app_eni" {
   filter {
     name   = "group-id"
     values = [aws_security_group.app_sg.id]
   }
 
   filter {
-    name   = "subnet-id"
-    values = [aws_subnet.public_a.id]
-  }
-
-  # ALIGNED TO TODO-APP METRICS: Searches strictly for the fully live, associated state
-  filter {
     name   = "status"
-    values = ["associated"]
+    values = ["in-use"]
   }
-
+  
   depends_on = [time_sleep.wait_for_fargate_eni]
+}
+
+locals {
+  has_active_eni   = length(data.aws_network_interfaces.app_eni.ids) > 0
+  extracted_eni_id = local.has_active_eni ? element(sort(data.aws_network_interfaces.app_eni.ids), 0) : null
+}
+
+data "aws_network_interface" "fargate_ip_lookup" {
+  id = local.extracted_eni_id != null ? local.extracted_eni_id : "eni-00000000000000000"
 }
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  value       = "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000"
+  value       = local.has_active_eni && try(data.aws_network_interface.fargate_ip_lookup.association[0].public_ip, "") != "" ? "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000" : "PENDING_AWS_NETWORK_ATTACHMENT"
 }
