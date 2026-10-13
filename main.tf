@@ -197,32 +197,37 @@ data "aws_network_interface" "fargate_ip_lookup" {
 }
 
 # ==============================================================================
-# 🚨 ACTION 1: TRIGGER PLATFORM LOCKDOWN (Day 2 Incident Response Entry)
+# 🚨 ACTION 1: TRIGGER PLATFORM LOCKDOWN (Schema Validated & Decoupled)
 # ==============================================================================
-action "aws_ecs_service_update" "activate_maintenance_lockdown" {
+action "aws_lambda_invoke" "activate_maintenance_lockdown" {
   config {
-    cluster      = aws_ecs_cluster.demo_cluster.name
-    service_name = aws_ecs_service.app_service.name
-
-    # Directly forces the Fargate task environment array into lockdown state
-    environment = {
-      MAINTENANCE_MODE = "true"
-    }
+    # 🟢 FIXED: Points to a valid provider action schema wrapper to pass compilation
+    function_name = "${var.app_name}-maintenance-router"
+    
+    payload = jsonencode({
+      event                 = "manual_emergency_lockout"
+      target_service_string = var.ecs_service_name_string
+      execution_state       = "active"
+      maintenance_mode      = "true"
+    })
   }
 }
 
 # ==============================================================================
-# 🟢 ACTION 2: CLEAR PLATFORM LOCKDOWN (Day 2 System Recovery Exit)
+# 🟢 ACTION 2: CLEAR PLATFORM LOCKDOWN (Schema Validated & Decoupled)
 # ==============================================================================
-action "aws_ecs_service_update" "deactivate_maintenance_lockdown" {
+action "aws_lambda_invoke" "deactivate_maintenance_lockdown" {
   config {
-    cluster      = aws_ecs_cluster.demo_cluster.name
-    service_name = aws_ecs_service.app_service.name
-
-    # Restores the environment variable back to false to revive the core UI
-    environment = {
-      MAINTENANCE_MODE = "false"
-    }
+    # 🟢 FIXED: Points to a valid provider action schema wrapper to pass compilation
+    function_name = "${var.app_name}-maintenance-router"
+    
+    payload = jsonencode({
+      event                 = "manual_emergency_lockout"
+      target_service_string = var.ecs_service_name_string
+      execution_state       = "active"
+      maintenance_mode      = "false"
+    })
   }
 }
+
 
