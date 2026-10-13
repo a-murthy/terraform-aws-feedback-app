@@ -2,11 +2,11 @@
 # 1. CORE PLUGINS & CONFIGURATIONS
 # ==============================================================================
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.16.0" # Required for native Action framework compiler parsing
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.0" 
+      version = ">= 6.5.0" # 🟢 FIX: Upgrades provider track to natively recognize the action schema
     }
     time = {
       source  = "hashicorp/time"
