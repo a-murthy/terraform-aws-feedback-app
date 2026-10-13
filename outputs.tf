@@ -51,5 +51,11 @@ data "aws_network_interface" "fargate_ip_lookup" {
 
 output "application_url" {
   description = "The live, public endpoint generated for your Customer Feedback Board application."
-  value       = local.has_active_eni && try(data.aws_network_interface.fargate_ip_lookup.association[0].public_ip, "") != "" ? "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000" : "PENDING_AWS_NETWORK_ATTACHMENT"
+  # 🟢 FIXED: Safe conditional access to the list index structure during initial plan runs
+  value       = local.has_active_eni && length(data.aws_network_interface.fargate_ip_lookup.association) > 0 ? "http://${data.aws_network_interface.fargate_ip_lookup.association[0].public_ip}:5000" : "PENDING_AWS_NETWORK_ATTACHMENT"
+}
+
+output "target_security_group_id" {
+  description = "The primary firewall profile ensuring line-of-sight network connectivity."
+  value       = aws_security_group.app_sg.id
 }

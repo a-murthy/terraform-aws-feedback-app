@@ -102,6 +102,19 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_attachment" {
 # ==============================================================================
 # 5. COMPUTE ORCHESTRATION SEGMENT
 # ==============================================================================
+
+# 1. DYNAMIC DISCOVERY: Pinpoints the active add-on infrastructure workspace
+data "tfe_workspace" "addon_ws" {
+  organization = "apoorva-murthy-org"
+  name         = "feedback-app-addon-production" # Matches your add-on workspace name
+}
+
+# 2. STATE LOOKUP: Automatically grabs the outputs from the add-on workspace
+data "tfe_outputs" "addon" {
+  organization = "apoorva-murthy-org"
+  workspace    = data.tfe_workspace.addon_ws.name
+}
+
 resource "aws_ecs_cluster" "demo_cluster" {
   name = "${var.app_name}-cluster"
 }
@@ -117,7 +130,7 @@ resource "aws_ecs_task_definition" "no_code_app" {
   container_definitions = jsonencode([
     {
       name      = "feedback-board-engine"
-      image     = "ghcr.io/a-murthy/feedback-app:1.0.0" # 🟢 FIXED: Points directly to your clean GitHub package
+      image     = "ghcr.io/a-murthy/feedback-app:1.0.0"
       essential = true
       portMappings = [
         {
@@ -128,7 +141,8 @@ resource "aws_ecs_task_definition" "no_code_app" {
       environment = [
         {
           name  = "AI_ENABLED"
-          value = tostring(var.ai_enabled)
+          # 🟢 AUTOMATIC TOGGLE: Evaluates to true if your add-on engine output URL exists
+          value = try(data.tfe_outputs.addon.values.ai_engine_private_endpoint, "") != "" ? "true" : tostring(var.ai_enabled)
         },
         {
           name  = "MAINTENANCE_MODE"
