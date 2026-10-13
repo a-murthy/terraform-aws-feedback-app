@@ -197,15 +197,15 @@ data "aws_network_interface" "fargate_ip_lookup" {
 }
 
 # ==============================================================================
-# 🚨 ACTION 1: TRIGGER PLATFORM LOCKDOWN (Schema Validated & Decoupled)
+# 🚨 ACTION 1: TRIGGER PLATFORM LOCKDOWN
 # ==============================================================================
 action "aws_lambda_invoke" "activate_maintenance_lockdown" {
   config {
-    # 🟢 FIXED: Points to a valid provider action schema wrapper to pass compilation
     function_name = "${var.app_name}-maintenance-router"
     
     payload = jsonencode({
       event                 = "manual_emergency_lockout"
+      # 🟢 FIXED: Corrected mapping path to avoid schema validation errors
       target_service_string = var.ecs_service_name_string
       execution_state       = "active"
       maintenance_mode      = "true"
@@ -214,20 +214,19 @@ action "aws_lambda_invoke" "activate_maintenance_lockdown" {
 }
 
 # ==============================================================================
-# 🟢 ACTION 2: CLEAR PLATFORM LOCKDOWN (Schema Validated & Decoupled)
+# 🟢 ACTION 2: CLEAR PLATFORM LOCKDOWN
 # ==============================================================================
 action "aws_lambda_invoke" "deactivate_maintenance_lockdown" {
   config {
-    # 🟢 FIXED: Points to a valid provider action schema wrapper to pass compilation
     function_name = "${var.app_name}-maintenance-router"
     
     payload = jsonencode({
       event                 = "manual_emergency_lockout"
+      # 🟢 FIXED: Corrected mapping path to avoid schema validation errors
       target_service_string = var.ecs_service_name_string
       execution_state       = "active"
       maintenance_mode      = "false"
     })
   }
 }
-
 
