@@ -118,7 +118,7 @@ resource "aws_ecs_task_definition" "no_code_app" {
   container_definitions = jsonencode([
     {
       name      = "feedback-board-engine"
-      image     = "ghcr.io/a-murthy/feedback-app:1.0.0" # 🟢 Points cleanly to your validated GitHub package
+      image     = "ghcr.io/a-murthy/feedback-app:1.0.1" # 🟢 Points cleanly to your validated GitHub package
       essential = true
       portMappings = [
         {
@@ -135,6 +135,10 @@ resource "aws_ecs_task_definition" "no_code_app" {
         {
           name  = "MAINTENANCE_MODE"
           value = tostring(var.maintenance_mode)
+        },
+        {
+          name  = "AI_ENDPOINT_URL"
+          value = var.ai_endpoint_url
         }
       ]
     }

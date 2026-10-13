@@ -25,3 +25,11 @@ variable "ecs_service_name_string" {
   type    = string
   default = "feedback-app-service"
 }
+
+# Add this simple optional input variable to your main app variables.tf
+variable "ai_endpoint_url" {
+  type        = string
+  default     = ""  # 🟢 Safe fallback: defaults to empty if the addon isn't there
+  description = "Dynamic injection token holding the live Day 1 Lambda API URL."
+}
+
