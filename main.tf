@@ -195,3 +195,34 @@ locals {
 data "aws_network_interface" "fargate_ip_lookup" {
   id = local.extracted_eni_id != null ? local.extracted_eni_id : "eni-00000000000000000"
 }
+
+# ==============================================================================
+# 🚨 ACTION 1: TRIGGER PLATFORM LOCKDOWN (Day 2 Incident Response Entry)
+# ==============================================================================
+action "aws_ecs_service_update" "activate_maintenance_lockdown" {
+  config {
+    cluster      = aws_ecs_cluster.demo_cluster.name
+    service_name = aws_ecs_service.app_service.name
+
+    # Directly forces the Fargate task environment array into lockdown state
+    environment = {
+      MAINTENANCE_MODE = "true"
+    }
+  }
+}
+
+# ==============================================================================
+# 🟢 ACTION 2: CLEAR PLATFORM LOCKDOWN (Day 2 System Recovery Exit)
+# ==============================================================================
+action "aws_ecs_service_update" "deactivate_maintenance_lockdown" {
+  config {
+    cluster      = aws_ecs_cluster.demo_cluster.name
+    service_name = aws_ecs_service.app_service.name
+
+    # Restores the environment variable back to false to revive the core UI
+    environment = {
+      MAINTENANCE_MODE = "false"
+    }
+  }
+}
+
