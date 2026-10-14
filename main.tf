@@ -117,7 +117,7 @@ resource "aws_ecs_task_definition" "no_code_app" {
   container_definitions = jsonencode([
     {
       name      = "feedback-board-engine"
-      image     = "ghcr.io/a-murthy/feedback-app:1.0.2" # 🟢 VERIFIED: Target image tracker linked
+      image     = "ghcr.io/a-murthy/feedback-app:1.0.3" # 🟢 VERIFIED: Target image tracker linked
       essential = true
       portMappings = [
         {

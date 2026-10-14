@@ -4,7 +4,7 @@
 
 output "container_image" {
   description = "The verified target runtime engine URI consumed by the compute cluster."
-  value       = "ghcr.io/a-murthy/feedback-app:1.0.2"
+  value       = "ghcr.io/a-murthy/feedback-app:1.0.3"
 }
 
 output "ecs_cluster_name" {
